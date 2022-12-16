@@ -1,8 +1,12 @@
 package com.example.weather;
 
 
+import static com.android.volley.VolleyLog.TAG;
+
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +26,7 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity {
     RequestQueue requestQueue;
     TextView textView;
+    EditText cityText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +79,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void citySearch(View view) {
+        cityText = (EditText) findViewById(R.id.cityText);
         StringRequest request = new StringRequest(Request.Method.GET,
-                "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl&q=Tarragona",
+                "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl&q="+cityText.getText(),
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -101,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                                 textView.setText("Key: " + key + "\nType: " + type + "\nLocalized Name: " + localizedName+"\nRegion ID: "+regionId+ "\nCountryId: "+countryId);
                             //}
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            textView.setText("The city introduced doesn't exist");
                         }
 
                     }
