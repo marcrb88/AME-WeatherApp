@@ -1,12 +1,13 @@
 package com.example.weather;
 
 
-import static com.android.volley.VolleyLog.TAG;
 
 import android.os.Bundle;
-import android.util.Log;
+
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,16 +18,20 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.example.weather.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+
 
 
 public class MainActivity extends AppCompatActivity {
     RequestQueue requestQueue;
     TextView textView;
+    TextView textView2;
     EditText cityText;
+    TextView resultText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,12 +85,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void citySearch(View view) {
         cityText = (EditText) findViewById(R.id.cityText);
+        resultText = findViewById(R.id.text_result);
+        textView2 = findViewById(R.id.text_view2);
+
         StringRequest request = new StringRequest(Request.Method.GET,
                 "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl&q="+cityText.getText(),
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        textView = findViewById(R.id.text_view);
                         String key = "";
                         String type = "";
                         String localizedName = "";
@@ -94,8 +101,10 @@ public class MainActivity extends AppCompatActivity {
 
                         try {
                             JSONArray jsonarray = new JSONArray(response);
-                            //for (int i = 0; i < jsonarray.length(); i++) {
-                                JSONObject jsonObject = jsonarray.getJSONObject(0);
+                            ArrayList<City> cityArrayList= new ArrayList<>();
+
+                            for (int i = 0; i < jsonarray.length(); i++) {
+                                JSONObject jsonObject = jsonarray.getJSONObject(i);
                                 type = jsonObject.getString("Type");
                                 key = jsonObject.getString("Key");
                                 localizedName = jsonObject.getString("LocalizedName");
@@ -104,10 +113,21 @@ public class MainActivity extends AppCompatActivity {
                                 JSONObject country = jsonObject.getJSONObject("Country");
                                 countryId = country.getString("ID");
 
-                                textView.setText("Key: " + key + "\nType: " + type + "\nLocalized Name: " + localizedName+"\nRegion ID: "+regionId+ "\nCountryId: "+countryId);
-                            //}
+                                City city = new City (type, key,localizedName, regionId, countryId);
+                                cityArrayList.add(city);
+                            }
+                            resultText.setText("Resultats de la búsqueda");
+                            textView2.setText("");
+                            if (jsonarray.length() > 0) {
+                                for (City city : cityArrayList)
+                                    textView2.append(city.toString());
+                            } else {
+                                textView2.setText("");
+                                textView2.setText("La ciutat introduida no s'ha trobat");
+                            }
                         } catch (Exception e) {
-                            textView.setText("The city introduced doesn't exist");
+                            textView2.setText("");
+                            textView2.setText("Hi ha hagut un error");
                         }
 
                     }
