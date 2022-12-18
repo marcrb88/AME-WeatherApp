@@ -4,7 +4,6 @@ package com.example.weather;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
@@ -14,10 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,9 +33,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.UUID;
 
 
@@ -50,25 +45,32 @@ public class MainActivity extends AppCompatActivity {
     TextView textView2;
     EditText cityText;
     TextView resultText;
-    Button open;
-    Button close;
     BluetoothAdapter blueAdapter;
+    TextView status;
     TextView luminosity;
     TextView temperature;
+    Button listen;
+
 
     static final int STATE_LISTENING = 1;
-    static final int STATE_CONNECTING=2;
-    static final int STATE_CONNECTED=3;
-    static final int STATE_CONNECTION_FAILED=4;
-    static final int STATE_MESSAGE_RECEIVED=5;
+    static final int STATE_CONNECTING = 2;
+    static final int STATE_CONNECTED = 3;
+    static final int STATE_CONNECTION_FAILED = 4;
+    static final int STATE_MESSAGE_RECEIVED = 5;
     private static final String APP_NAME = "BTChat";
     private static final UUID MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66");
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        status = (TextView) findViewById(R.id.status);
+        luminosity =(TextView) findViewById(R.id.luminosity);
+        temperature = (TextView) findViewById(R.id.temperature);
+        listen = (Button) findViewById(R.id.listen);
 
         blueAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!blueAdapter.isEnabled()) {
@@ -88,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void listenClick(View target) {
+    public void listenClick(View target) throws IOException {
         ServerClass serverClass = new ServerClass();
         serverClass.start();
     }
@@ -97,15 +99,11 @@ public class MainActivity extends AppCompatActivity {
     private class ServerClass extends Thread {
         private BluetoothServerSocket serverSocket;
 
-        @SuppressLint("MissingPermission")
-        public ServerClass() {
-            try {
-                    serverSocket = blueAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
+        public ServerClass() throws IOException {
+            if (ActivityCompat.checkSelfPermission(MainActivity.this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                serverSocket = blueAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
             }
+
         }
 
         public void run()
@@ -149,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
         public Receive (BluetoothSocket socket)
         {
-            bluetoothSocket=socket;
+            bluetoothSocket = socket;
             InputStream tempIn=null;
 
             try {
@@ -186,6 +184,19 @@ public class MainActivity extends AppCompatActivity {
 
             switch (msg.what)
             {
+                case STATE_LISTENING:
+                    status.setText("Listening");
+                    break;
+                case STATE_CONNECTING:
+                    status.setText("Connecting");
+                    break;
+                case STATE_CONNECTED:
+                    status.setText("Connected");
+                    break;
+                case STATE_CONNECTION_FAILED:
+                    status.setText("Connection Failed");
+                    break;
+
                 case STATE_MESSAGE_RECEIVED:
                     byte[] readBuff= (byte[]) msg.obj;
                     String tempMsg=new String(readBuff,0,msg.arg1);
