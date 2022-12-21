@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/Parent"
+    android:id="@+id/parent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
@@ -57,7 +57,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
+
         app:layout_constraintTop_toBottomOf="@+id/luminosity"
+
         app:layout_constraintVertical_bias="1.0">
 
         <LinearLayout
@@ -88,7 +90,7 @@
         android:layout_height="0dp"
         android:layout_marginStart="26dp"
         android:layout_marginTop="32dp"
-        android:text="Resultats de la búsqueda:"
+        android:text="Resultats de la bÃºsqueda:"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_view"
         tools:ignore="NotSibling" />
