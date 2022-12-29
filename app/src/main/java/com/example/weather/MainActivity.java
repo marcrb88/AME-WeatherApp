@@ -7,26 +7,19 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.os.ParcelUuid;
-import android.util.Log;
-
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-
-import android.os.Handler;
-import android.os.Message;
 
 import android.view.View;
-import android.widget.Button;
+
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -39,7 +32,7 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
+import org.w3c.dom.Text;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -47,21 +40,14 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Set;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.UUID;
-
-
 
 public class MainActivity extends AppCompatActivity {
     RequestQueue requestQueue;
-    TextView textView;
-    TextView textView2;
+    TextView textView, textView2,resultText, luminosity, temperature;
     EditText cityText;
-
-    TextView resultText, luminosity;
+    ScrollView scrollView;
     private InputStream inStream;
+    boolean activeSocket = false;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -71,32 +57,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
-        luminosity = findViewById(R.id.luminosity);
+        luminosity = (TextView) findViewById(R.id.luminosity);
+        temperature = (TextView) findViewById(R.id.temperature);
 
 
         requestQueue = Volley.newRequestQueue(this);
         stringRequest();
 
-        try {
-            bluetooth();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 
-        private void bluetooth () throws IOException {
-            String[] bluePermision = {Manifest.permission.BLUETOOTH_CONNECT};
-            int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT);
+        @RequiresApi(api = Build.VERSION_CODES.S)
+        @SuppressLint("MissingPermission")
+        public void bluetooth (View view) throws IOException {
             BluetoothAdapter blueAdapter = BluetoothAdapter.getDefaultAdapter();
             if (blueAdapter != null) {
                 if (blueAdapter.isEnabled()) {
-                    if (permission != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(
-                                this,
-                                bluePermision,
-                                1
-                        );
                         Set<BluetoothDevice> bondedDevices = blueAdapter.getBondedDevices();
                         if (bondedDevices.size() > 0) {
                             Object[] devices = (Object[]) bondedDevices.toArray();
@@ -104,36 +80,31 @@ public class MainActivity extends AppCompatActivity {
                             ParcelUuid[] uuids = device.getUuids();
                             BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
                             socket.connect();
-
+                            activeSocket = true;
                             inStream = socket.getInputStream();
                             DataInputStream mmInStream = new DataInputStream(inStream);
-                            byte[] luminosityBuffer = new byte[16];
-                            //byte[] temperatureBuffer = new byte[20];
+                            byte[] buffer = new byte[18];
 
-                            int luminosityBytes = mmInStream.read(luminosityBuffer);
-                            boolean message = true;
-                            while (luminosityBytes != 16) {
-                                if (message) {
-                                    Toast toast = Toast.makeText(this, "Loading application data ...", Toast.LENGTH_LONG);
-                                    toast.show();
-                                    message = false;
-                                }
-                                luminosityBytes = mmInStream.read(luminosityBuffer);
+                            luminosity.setText("");
+                            while (inStream.available() != 18) {}
+                            int bytes = mmInStream.read(buffer);
 
-                            }
-                            String readMessage = new String(luminosityBuffer, 0, 16);
-                            luminosity.setText(readMessage);
+                            String readLuminosity= new String(buffer, 0, bytes);
+                            String [] array = readLuminosity.split(",");
+                            luminosity.setText("Lux: " + array[0]);
+                            temperature.setText("Temperature: " + array[1] + "°C");
+
+                            socket.getInputStream().close();
+                            socket.close();
 
                         }
                     }
-
-                    Log.e("error", "No appropriate paired devices.");
                 } else {
-                    Log.e("error", "Bluetooth is disabled.");
-                }
-            }
-        }
+                    Toast.makeText(this, "Bluetooth disable", Toast.LENGTH_LONG).show();
 
+            }
+
+        }
 
         private void stringRequest () {
             StringRequest request = new StringRequest(Request.Method.GET,
@@ -178,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
             cityText = (EditText) findViewById(R.id.cityText);
             resultText = findViewById(R.id.text_result);
             textView2 = findViewById(R.id.text_view2);
+            scrollView = findViewById(R.id.scrollView4);
 
             StringRequest request = new StringRequest(Request.Method.GET,
                     "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl&q=" + cityText.getText(),
@@ -207,18 +179,19 @@ public class MainActivity extends AppCompatActivity {
                                     City city = new City(type, key, localizedName, regionId, countryId);
                                     cityArrayList.add(city);
                                 }
-                                resultText.setText("Resultats de la búsqueda");
+
                                 textView2.setText("");
+                                scrollView.fullScroll(ScrollView.FOCUS_UP);
                                 if (jsonarray.length() > 0) {
                                     for (City city : cityArrayList)
                                         textView2.append(city.toString());
                                 } else {
                                     textView2.setText("");
-                                    textView2.setText("La ciutat introduida no s'ha trobat");
+                                    textView2.setText("The city introduced doesn't exist");
                                 }
                             } catch (Exception e) {
                                 textView2.setText("");
-                                textView2.setText("Hi ha hagut un error");
+                                textView2.setText("An error has ocurred");
                             }
 
                         }
@@ -233,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
             );
             requestQueue.add(request);
 
-            //textView.setText("Click");
         }
-    }
+
+}
 
 
