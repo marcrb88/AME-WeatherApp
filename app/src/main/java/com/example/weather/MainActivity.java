@@ -1,12 +1,10 @@
 package com.example.weather;
 
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -21,7 +19,6 @@ import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -32,7 +29,6 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -61,11 +57,14 @@ public class MainActivity extends AppCompatActivity {
         temperature = (TextView) findViewById(R.id.temperature);
 
 
-        requestQueue = Volley.newRequestQueue(this);
-        stringRequest();
+        currentConditions(null);
+
 
     }
-
+        public void currentConditions (View view) {
+            requestQueue = Volley.newRequestQueue(this);
+            stringRequest();
+        }
 
         @RequiresApi(api = Build.VERSION_CODES.S)
         @SuppressLint("MissingPermission")
@@ -106,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        private void stringRequest () {
+        public void stringRequest () {
             StringRequest request = new StringRequest(Request.Method.GET,
                     "https://dataservice.accuweather.com/currentconditions/v1/304358?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl",
                     new Response.Listener<String>() {
