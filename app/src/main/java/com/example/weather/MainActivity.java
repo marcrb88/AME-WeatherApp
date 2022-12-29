@@ -97,11 +97,9 @@ public class MainActivity extends AppCompatActivity {
                             socket.close();
 
                         }
-                    }
-                } else {
-                    Toast.makeText(this, "Bluetooth disable", Toast.LENGTH_LONG).show();
-
-            }
+                    } else
+                        Toast.makeText(this, "Bluetooth disable", Toast.LENGTH_LONG).show();
+                }
 
         }
 
