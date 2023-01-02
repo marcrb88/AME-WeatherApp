@@ -33,6 +33,7 @@ import org.json.JSONObject;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Set;
 
@@ -158,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
                             String localizedName = "";
                             String regionId = "";
                             String countryId = "";
+                            String latitude = "";
+                            String longitude = "";
 
                             try {
                                 JSONArray jsonarray = new JSONArray(response);
@@ -172,8 +175,13 @@ public class MainActivity extends AppCompatActivity {
                                     regionId = region.getString("ID");
                                     JSONObject country = jsonObject.getJSONObject("Country");
                                     countryId = country.getString("ID");
+                                    JSONObject position = jsonObject.getJSONObject("GeoPosition");
+                                    float flatitude = BigDecimal.valueOf(position.getDouble("Latitude")).floatValue();
+                                    latitude = Float.toString(flatitude);
+                                    float flongitude = BigDecimal.valueOf(position.getDouble("Longitude")).floatValue();
+                                    longitude = Float.toString(flongitude);
 
-                                    City city = new City(type, key, localizedName, regionId, countryId);
+                                    City city = new City(type, key, localizedName, regionId, countryId, latitude, longitude);
                                     cityArrayList.add(city);
                                 }
 
