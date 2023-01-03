@@ -50,8 +50,8 @@ public class City {
 
     @Override
     public String toString() {
-        return "Weather of " + localizedName + " located in: " + countryId + ":" + "\n" +
-                " key: " + key +
+        return "Weather of " + localizedName + " located in " + countryId + ":" + "\n" +
+                "key: " + key +
                 ", type: " + type +
                 ", region: " + regionId +
                 ", latitude: " + latitude +

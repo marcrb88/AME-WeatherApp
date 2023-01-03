@@ -132,7 +132,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="52dp"
         android:layout_marginEnd="83dp"
-        android:onClick="currentConditions"
+        android:onClick="refresh"
         android:text="REFRESH"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button" />

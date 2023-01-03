@@ -39,12 +39,14 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
-    RequestQueue requestQueue;
-    TextView textView, textView2,resultText, luminosity, temperature;
-    EditText cityText;
-    ScrollView scrollView;
+    private RequestQueue requestQueue;
+    private TextView textView, textView2,resultText, luminosity, temperature;
+    private EditText cityText;
+    private ScrollView scrollView;
     private InputStream inStream;
     boolean activeSocket = false;
+    private String cityKey;
+    final private String apiKey = "5AlvgQMpO5eZ3ZGDTXYMwkWHNRAQAUM7";
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -54,17 +56,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 
+        textView = findViewById(R.id.text_view);
         luminosity = (TextView) findViewById(R.id.luminosity);
         temperature = (TextView) findViewById(R.id.temperature);
 
-
-        currentConditions(null);
-
+        requestQueue = Volley.newRequestQueue(this);
 
     }
-        public void currentConditions (View view) {
-            requestQueue = Volley.newRequestQueue(this);
-            stringRequest();
+        public void refresh(View view) {
+            currentConditions();
         }
 
         @RequiresApi(api = Build.VERSION_CODES.S)
@@ -104,14 +104,90 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-        public void stringRequest () {
-            StringRequest request = new StringRequest(Request.Method.GET,
-                    "https://dataservice.accuweather.com/currentconditions/v1/304358?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl",
+        public void citySearch (View view){
+            cityText = (EditText) findViewById(R.id.cityText);
+            resultText = findViewById(R.id.text_result);
+            textView2 = findViewById(R.id.text_view2);
+            scrollView = findViewById(R.id.scrollView4);
+            String key = "";
+
+            StringRequest request1 = new StringRequest(Request.Method.GET,
+                    "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=" + apiKey + "&q=" + cityText.getText(),
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
-                            textView = findViewById(R.id.text_view);
+                            String key = "";
+                            String type = "";
+                            String localizedName = "";
+                            String regionId = "";
+                            String countryId = "";
+                            String latitude = "";
+                            String longitude = "";
+                            cityKey = null;
 
+                            try {
+                                JSONArray jsonarray = new JSONArray(response);
+                                ArrayList<City> cityArrayList = new ArrayList<>();
+
+                                for (int i = 0; i < jsonarray.length(); i++) {
+                                    JSONObject jsonObject = jsonarray.getJSONObject(i);
+                                    type = jsonObject.getString("Type");
+                                    key = jsonObject.getString("Key");
+                                    if (cityKey == null)  cityKey = key;
+                                    localizedName = jsonObject.getString("LocalizedName");
+                                    JSONObject region = jsonObject.getJSONObject("Region");
+                                    regionId = region.getString("ID");
+                                    JSONObject country = jsonObject.getJSONObject("Country");
+                                    countryId = country.getString("ID");
+                                    JSONObject position = jsonObject.getJSONObject("GeoPosition");
+                                    float flatitude = BigDecimal.valueOf(position.getDouble("Latitude")).floatValue();
+                                    latitude = Float.toString(flatitude);
+                                    float flongitude = BigDecimal.valueOf(position.getDouble("Longitude")).floatValue();
+                                    longitude = Float.toString(flongitude);
+
+                                    City city = new City(type, key, localizedName, regionId, countryId, latitude, longitude);
+                                    cityArrayList.add(city);
+                                }
+                                textView2.setText("");
+                                scrollView.fullScroll(ScrollView.FOCUS_UP);
+                                boolean currentConditions = false;
+                                if (jsonarray.length() > 0) {
+                                    for (City city : cityArrayList)
+                                        textView2.append(city.toString());
+                                        currentConditions = true;
+                                } else {
+                                    textView2.setText("");
+                                    textView2.setText("The city introduced doesn't exist");
+                                }
+                                if (currentConditions) currentConditions();
+                                else textView.setText("");
+                            } catch (Exception e) {
+                                textView2.setText("");
+                                textView2.setText("An error has ocurred");
+                            }
+
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                        }
+
+                    }
+            );
+
+
+            requestQueue.add(request1);
+
+        }
+
+        public void currentConditions() {
+            if (cityKey == null) textView.setText("Can't refresh without a city name");
+            StringRequest request2 = new StringRequest(Request.Method.GET,
+                    "https://dataservice.accuweather.com/currentconditions/v1/" + cityKey + "?apikey=" + apiKey,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
                             String state = "";
                             double value = 0;
                             boolean hasPrecipitation = false;
@@ -135,83 +211,12 @@ public class MainActivity extends AppCompatActivity {
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-
                         }
 
                     }
             );
-            requestQueue.add(request);
-        }
-
-        public void citySearch (View view){
-            cityText = (EditText) findViewById(R.id.cityText);
-            resultText = findViewById(R.id.text_result);
-            textView2 = findViewById(R.id.text_view2);
-            scrollView = findViewById(R.id.scrollView4);
-
-            StringRequest request = new StringRequest(Request.Method.GET,
-                    "https://dataservice.accuweather.com/locations/v1/cities/search?apikey=q0ANEWlKMqCujZ4oIxZwCRbbbbSMpAdl&q=" + cityText.getText(),
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            String key = "";
-                            String type = "";
-                            String localizedName = "";
-                            String regionId = "";
-                            String countryId = "";
-                            String latitude = "";
-                            String longitude = "";
-
-                            try {
-                                JSONArray jsonarray = new JSONArray(response);
-                                ArrayList<City> cityArrayList = new ArrayList<>();
-
-                                for (int i = 0; i < jsonarray.length(); i++) {
-                                    JSONObject jsonObject = jsonarray.getJSONObject(i);
-                                    type = jsonObject.getString("Type");
-                                    key = jsonObject.getString("Key");
-                                    localizedName = jsonObject.getString("LocalizedName");
-                                    JSONObject region = jsonObject.getJSONObject("Region");
-                                    regionId = region.getString("ID");
-                                    JSONObject country = jsonObject.getJSONObject("Country");
-                                    countryId = country.getString("ID");
-                                    JSONObject position = jsonObject.getJSONObject("GeoPosition");
-                                    float flatitude = BigDecimal.valueOf(position.getDouble("Latitude")).floatValue();
-                                    latitude = Float.toString(flatitude);
-                                    float flongitude = BigDecimal.valueOf(position.getDouble("Longitude")).floatValue();
-                                    longitude = Float.toString(flongitude);
-
-                                    City city = new City(type, key, localizedName, regionId, countryId, latitude, longitude);
-                                    cityArrayList.add(city);
-                                }
-
-                                textView2.setText("");
-                                scrollView.fullScroll(ScrollView.FOCUS_UP);
-                                if (jsonarray.length() > 0) {
-                                    for (City city : cityArrayList)
-                                        textView2.append(city.toString());
-                                } else {
-                                    textView2.setText("");
-                                    textView2.setText("The city introduced doesn't exist");
-                                }
-                            } catch (Exception e) {
-                                textView2.setText("");
-                                textView2.setText("An error has ocurred");
-                            }
-
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-
-                        }
-
-                    }
-            );
-            requestQueue.add(request);
-
-        }
+            requestQueue.add(request2);
+    }
 
 }
 
