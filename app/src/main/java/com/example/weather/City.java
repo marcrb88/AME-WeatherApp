@@ -1,13 +1,13 @@
 package com.example.weather;
 
 public class City {
-    private String key = "";
-    private String type = "";
-    private String localizedName = "";
-    private String regionId = "";
-    private String countryId = "";
-    private String latitude = "";
-    private String longitude = "";
+    private String key;
+    private String type;
+    private String localizedName;
+    private String regionId;
+    private String countryId;
+    private String latitude;
+    private String longitude;
 
     public City(
             String key,
