@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private InputStream inStream;
     boolean activeSocket = false;
     private String cityKey;
-    final private String apiKey = "5AlvgQMpO5eZ3ZGDTXYMwkWHNRAQAUM7";
+    final private String apiKey = "w3enrWrq74eqbREYTdcgsIme21unVk4U";
 
     @SuppressLint("MissingInflatedId")
     @Override
